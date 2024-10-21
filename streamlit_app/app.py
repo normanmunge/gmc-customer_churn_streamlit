@@ -6,10 +6,12 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.linear_model import LogisticRegression
+import random
 
 #Load environment variables
 load_dotenv()
 
+# load the data
 def load_data():
     return pd.read_csv('../datasets/Espresso_churn_clean_dataset.csv')
 
@@ -37,25 +39,30 @@ def handle_outliers(df):
 # Encoding our dataset
 def encode_data(df):
     encoder = LabelEncoder()
+
     for col in df.columns:
-        if df[col].dtype == 'object':
+        # Encoding only object data types and excluding the region_name column since we want to display it on the app
+        if df[col].dtype == 'object' and col != 'region_name':
             df[col] = encoder.fit_transform(df[col])
 
     return df
 
 # Model Training
 def train_model(df):
-    print(df.head())
     X = df[['region', 'num_of_connections', 'zone1_calls', 'zone2_calls', 'regularity', 'active_pack']]
     y = df['churn']
 
+    # Splitting the data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
+    # Training the model
     model = LogisticRegression(max_iter=1000)
     model.fit(X_train, y_train)
 
+    # Making predictions
     y_pred = model.predict(X_test)
 
+    # Return the model, X_test and y_pred variables
     return model, X_test, y_pred
     #prediction_proba = model.predict_proba(X_test)
 
@@ -91,6 +98,9 @@ def preprocess_data(df):
     # Converting to lower case and replacing spaces with underscores
     df.columns = df.columns.str.lower().str.strip().str.replace(' ', '_')
 
+    df['region_name'] = df['region']
+    df['active_pack_description'] = df['active_pack']
+
     with st.expander('Data'):
         st.write(df.head())
 
@@ -106,11 +116,25 @@ def preprocess_data(df):
 
 
 def define_input_handlers(df, features):
+    #features_ = [f'{col.capitalize().replace("_", " ")}' for col in features]
+                
+    #categorical_features = ['region_name', 'active_pack_description']
+
+    #slider_features = [col for col in features_ if col not in categorical_features]
+
     for feature in features:
         unique_values = df[feature].unique().tolist()
+        st.selectbox(feature, unique_values)
+        # Set dropdowns for categorical columns
+        # if ['region_name', 'active_pack_description'] in features:
+        #     feature_name = f'{feature.capitalize().replace("_", " ")}'
+        #     unique_values = df[feature].unique().tolist()
+        #     st.selectbox(feature_name, unique_values)
+        # else:
+        # Set the slider for numerical columns
+        # feature_name = f'{feature.capitalize().replace("_", " ")}'
+        # st.slider(feature_name, df[feature].min(), df[feature].max(), df[feature].mean())
         
-        st.selectbox(f'{feature}', unique_values)
-
 
 def main():
     st.set_page_config(
@@ -133,10 +157,10 @@ def main():
 
         st.write('Add parameters to see the prediction')
 
-        features = ['region', 'num_of_connections', 'zone1_calls', 'zone2_calls', 'regularity', 'active_pack']
+        features = ['region_name','active_pack_description', 'num_of_connections', 'zone1_calls', 'zone2_calls', 'regularity']
         target = 'churn'
 
-        unique_values = define_input_handlers(df, features)
+        #unique_values = define_input_handlers(df, features)
 
 
 main()
