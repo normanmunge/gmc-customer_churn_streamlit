@@ -7,3 +7,4 @@ backgroundColor = "white"
 
 [server]
 maxMessageSize = 500
+runOnSave = true
