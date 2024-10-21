@@ -6,7 +6,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix, ConfusionMatrixDisplay
 from sklearn.linear_model import LogisticRegression
-import random
+import time
 
 #Load environment variables
 load_dotenv()
@@ -116,25 +116,52 @@ def preprocess_data(df):
 
 
 def define_input_handlers(df, features):
-    #features_ = [f'{col.capitalize().replace("_", " ")}' for col in features]
-                
-    #categorical_features = ['region_name', 'active_pack_description']
-
-    #slider_features = [col for col in features_ if col not in categorical_features]
+    options = []
 
     for feature in features:
         unique_values = df[feature].unique().tolist()
-        st.selectbox(feature, unique_values)
         # Set dropdowns for categorical columns
-        # if ['region_name', 'active_pack_description'] in features:
-        #     feature_name = f'{feature.capitalize().replace("_", " ")}'
-        #     unique_values = df[feature].unique().tolist()
-        #     st.selectbox(feature_name, unique_values)
-        # else:
-        # Set the slider for numerical columns
-        # feature_name = f'{feature.capitalize().replace("_", " ")}'
-        # st.slider(feature_name, df[feature].min(), df[feature].max(), df[feature].mean())
-        
+        if feature == 'region_name' or feature == 'active_pack_description':
+            feature_name = f'{feature.capitalize().replace("_", " ")}'
+            unique_values = df[feature].unique().tolist()
+            option = st.selectbox(feature_name, unique_values)
+            options.append(option)
+        else:
+        #Set the slider for numerical columns
+            feature_name = f'{feature.capitalize().replace("_", " ")}'
+            option = st.slider(feature_name, df[feature].min(), df[feature].max(), df[feature].mean())
+            options.append(option)
+
+    if 'processed' not in st.session_state:
+        st.session_state.processed = {}
+
+    if st.button('Predict'):
+        for option in options:
+            result = show_computation_progress(option)
+            st.session_state.processed[option] = result
+
+        if option in st.session_state.processed:
+            st.write(st.session_state.processed[option][0])
+
+
+def show_computation_progress(option):
+
+    with st.spinner('Loading...'):
+        time.sleep(5)
+
+    return f'{option} processed'
+
+    # 'Loading...'
+
+    # # Add a placeholder
+    # latest_iteration = st.empty()
+    # bar = st.progress(0)
+
+    # for i in range(100):
+    # # Update the progress bar with each iteration.
+    #     latest_iteration.text(f'{i+1} Percentage')
+    #     bar.progress(i + 1)
+    #     time.sleep(0.1)
 
 def main():
     st.set_page_config(
@@ -144,7 +171,7 @@ def main():
 
     st.title('Predict customer churn')
 
-    st.info('This is a simple demo of how to build a customer churn prediction app using Streamlit.')
+    st.info('Espresso customer churn prediction app for telecoms in Senegal.')
 
     df = load_data()
 
@@ -160,7 +187,7 @@ def main():
         features = ['region_name','active_pack_description', 'num_of_connections', 'zone1_calls', 'zone2_calls', 'regularity']
         target = 'churn'
 
-        #unique_values = define_input_handlers(df, features)
+        unique_values = define_input_handlers(df, features)
 
 
 main()
