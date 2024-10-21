@@ -62,6 +62,9 @@ def train_model(df):
     # Making predictions
     y_pred = model.predict(X_test)
 
+    # TODO:-> Adding the user_id column to the prediction_df
+    #X_test['user_id'] = df.user_id
+
     # Return the model, X_test and y_pred variables
     return model, X_test, y_pred
     #prediction_proba = model.predict_proba(X_test)
@@ -69,10 +72,17 @@ def train_model(df):
 
 def evaluate_model(model, test_data):
     prediction_proba = model.predict_proba(test_data)
-    return pd.DataFrame(prediction_proba).rename(columns={
+
+    st.header('Churn Probability')
+
+    prediction_df =  pd.DataFrame(prediction_proba).rename(columns={
         0: 'Actual',
         1: 'Predicted'
     })
+
+    # TODO:-> Adding the user_id column to the prediction_df
+    #prediction_df['user_id'] = test_data.index
+    return prediction_df
 
 
 def preprocess_data(df):
@@ -98,6 +108,7 @@ def preprocess_data(df):
     # Converting to lower case and replacing spaces with underscores
     df.columns = df.columns.str.lower().str.strip().str.replace(' ', '_')
 
+    # Add our region_name and active_pack_description columns to use the original columns for encoding purposes.
     df['region_name'] = df['region']
     df['active_pack_description'] = df['active_pack']
 
@@ -147,7 +158,7 @@ def define_input_handlers(df, features):
 def show_computation_progress(option):
 
     with st.spinner('Loading...'):
-        time.sleep(5)
+        time.sleep(.5)
 
     return f'{option} processed'
 
@@ -173,67 +184,28 @@ def main():
 
     st.info('Espresso customer churn prediction app for telecoms in Senegal.')
 
+    # Load the data -> load_data()
     df = load_data()
 
+    # Preprocess the data, train the model and evaluate the model
     prediction_prob = preprocess_data(df)
 
-    prediction_prob
+    st.dataframe(prediction_prob, width=1000, height=500)
 
+    # Define input parameters in the sidebar
     with st.sidebar:
         st.header('Input features')
 
-        st.write('Add parameters to see the prediction')
-
+        st.write('Update parameters to see the prediction')
+        
+        # Define the input features
         features = ['region_name','active_pack_description', 'num_of_connections', 'zone1_calls', 'zone2_calls', 'regularity']
-        target = 'churn'
 
         unique_values = define_input_handlers(df, features)
-
-
-main()
-
-        
-        
-
-
-    # features = ['region', 'num_of_connections', 'zone1_calls', 'zone2_calls', 'regularity', 'active_pack']
-    # target = 'churn'
-
-    # st.write(df.head())
-
-    # model, predictions = preprocess_data(df)
-
-    # st.header('Input Fields')
 
     
 
 
-
-# features = ['region', 'num_of_connections', 'zone1_calls', 'zone2_calls', 'regularity', 'active_pack']
-# target = 'churn'
-
-#print(df.head())
-
-
-# with st.expander('Data'):
-#     st.write('This dataset contains the following columns:')
-#     df = pd.read_csv('../datasets/Expresso_churn_dataset.csv')
-#     df.rename(inplace=True, columns={
-#         "TENURE": "network_duration",
-#         "MONTANT": "topup_amount",
-#         "FREQUENCE_RECH": "num_refill_amount",
-#         "REVENUE": "monthly_income",
-#         "ARPU_SEGMENT": "income_over_90days_3",
-#         "FREQUENCE": "num_times_income_generated",
-#         "DATA_VOLUME": "num_of_connections",
-#         "ON_NET": "inter_espresso_call",
-#         "ORANGE": "orange_calls",
-#         "TIGO": "tigo_calls",
-#         "ZONE1": "zone1_calls",
-#         "ZONE2": "zone2_calls",
-#         "MRG": "visiting_client",
-#         "TOP_PACK": "active_pack",
-#         "FREQ_TOP_PACK":"frequency_activating_top_pack"
-#     })
+main()
 
 
